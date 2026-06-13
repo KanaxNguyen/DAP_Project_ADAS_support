@@ -10,12 +10,6 @@ Dự án xây dựng một **nguyên mẫu học thuật (prototype)** hệ th�
 
 ---
 
-## 👥 Thành Viên Nhóm (Group 6)
-
-> Thông tin đầy đủ về thành viên, MSSV và môn học được ghi trong file báo cáo `GR6_Paper_Report.pdf`.
-
----
-
 ## ⚠️ Tuyên Bố Về Nguồn (Attribution & References)
 
 Dự án này là **nguyên mẫu học thuật tự xây dựng từ đầu** (from scratch), lấy cảm hứng và triển khai lại các kỹ thuật từ những công trình nghiên cứu đã công bố. **Không có code nào được sao chép trực tiếp** từ các repository gốc.

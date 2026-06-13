@@ -1,0 +1,36 @@
+MIT License
+
+Copyright (c) 2024 Nhóm 6 (GR6) – Đồ Án Phân Tích Dữ Liệu, Kỳ 4
+
+Giấy phép này cấp quyền miễn phí cho bất kỳ cá nhân nào nhận được một bản
+sao của phần mềm này và các tệp tài liệu liên quan (gọi chung là "Phần
+mềm"), để sử dụng Phần mềm mà không bị hạn chế, bao gồm không giới hạn quyền
+sử dụng, sao chép, sửa đổi, hợp nhất, xuất bản, phân phối, cấp phép lại
+và/hoặc bán các bản sao của Phần mềm, và cho phép những người được cung cấp
+Phần mềm làm như vậy, với các điều kiện sau:
+
+Thông báo bản quyền trên và thông báo về giấy phép này phải được bao gồm
+trong tất cả các bản sao hoặc phần quan trọng của Phần mềm.
+
+PHẦN MỀM ĐƯỢC CUNG CẤP "NGUYÊN TRẠNG", KHÔNG CÓ BẢO HÀNH DƯỚI BẤT KỲ HÌNH
+THỨC NÀO, DÙ RÕ RÀNG HAY NGỤ Ý, BAO GỒM NHƯNG KHÔNG GIỚI HẠN CÁC BẢO HÀNH
+VỀ KHẢ NĂNG THƯƠNG MẠI HÓA, PHÙ HỢP VỚI MỘT MỤC ĐÍCH CỤ THỂ VÀ KHÔNG VI
+PHẠM. TRONG MỌI TRƯỜNG HỢP, TÁC GIẢ HOẶC CHỦ SỞ HỮU BẢN QUYỀN SẼ KHÔNG CHỊU
+TRÁCH NHIỆM VỀ BẤT KỲ KHIẾU NẠI, THIỆT HẠI HOẶC TRÁCH NHIỆM PHÁP LÝ NÀO
+PHÁT SINH TỪ HOẶC LIÊN QUAN ĐẾN PHẦN MỀM HOẶC VIỆC SỬ DỤNG PHẦN MỀM.
+
+---
+
+IMPORTANT NOTE / LƯU Ý QUAN TRỌNG:
+
+This project is an academic prototype (student coursework). The techniques
+implemented draw upon published research listed in the README Attribution
+section. Each technique is subject to the copyright of its original authors.
+This MIT license covers only the original code written by Group 6, not the
+underlying algorithms or pretrained model weights.
+
+Dự án này là nguyên mẫu học thuật (đồ án sinh viên). Các kỹ thuật được triển
+khai dựa trên các công trình nghiên cứu đã công bố được liệt kê trong phần
+Attribution của README. Mỗi kỹ thuật thuộc bản quyền của tác giả gốc.
+Giấy phép MIT này chỉ áp dụng cho code gốc do Nhóm 6 tự viết, không áp dụng
+cho các thuật toán nền tảng hay trọng số mô hình pretrained.

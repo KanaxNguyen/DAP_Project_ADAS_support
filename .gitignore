@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Dữ liệu, checkpoint và kết quả chạy không đưa lên Git
+data/
+checkpoints/
+runs/
+*.pt
+video.mp4
+
+.DS_Store

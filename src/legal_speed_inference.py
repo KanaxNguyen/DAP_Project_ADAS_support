@@ -11,14 +11,28 @@ Mô tả:
     Sử dụng bầu chọn đa số (majority voting) theo cửa sổ lịch sử để làm mượt kết quả.
 
 Cơ sở pháp lý:
-    - Luật Giao Thông Đường Bộ Việt Nam 2008 (sửa đổi 2018).
-    - Thông tư 31/2019/TT-BGTVT về quy định tốc độ xe cơ giới.
+    - Thông tư 38/2024/TT-BGTVT (hiệu lực 01/01/2025, thay Thông tư 31/2019/TT-BGTVT),
+      Điều 6 (trong khu vực đông dân cư) và Điều 7 (ngoài khu vực đông dân cư).
 
-Lưu ý: Lô-gic suy luận là hủ thống quy tắc (rule-based) do nhóm tự thiết kế.
+Giả định:
+    - Xe là ô tô chở người đến 30 chỗ (trừ xe buýt) hoặc ô tô tải đến 3,5 tấn.
+    - Thấy dải phân cách cứng thì coi là "đường đôi". Đường một chiều từ hai làn trở lên
+      cũng được mức của đường đôi, nhưng mô hình chưa nhận biết được nên bị tính như đường hai chiều.
+    - Không áp dụng cho đường cao tốc (Điều 9).
+
+Lưu ý: Lô-gic suy luận là hệ thống quy tắc (rule-based) do nhóm tự thiết kế.
 """
 import torch
 import numpy as np
 from collections import Counter
+
+# Tốc độ tối đa (km/h) theo Thông tư 38/2024/TT-BGTVT, khóa: (trong khu dân cư, có dải phân cách)
+DEFAULT_SPEED_LIMITS = {
+    (True, True): 60,    # Điều 6: đường đôi
+    (True, False): 50,   # Điều 6: đường hai chiều
+    (False, True): 90,   # Điều 7: đường đôi
+    (False, False): 80,  # Điều 7: đường hai chiều
+}
 
 class LegalSpeedInference:
     def __init__(self, smoothing_window=10, hard_divider_threshold=0.0005):
@@ -28,9 +42,9 @@ class LegalSpeedInference:
         """
         self.smoothing_window = smoothing_window
         self.hard_divider_threshold = hard_divider_threshold
-        
+
         # Initial states
-        self.current_speed = 60  # Default legal speed in Vietnam (non-residential, undivided)
+        self.current_speed = DEFAULT_SPEED_LIMITS[(False, False)]  # Ngoài khu dân cư, đường hai chiều
         self.residential_state = False  # False: outside, True: inside
         self.last_explicit_speed = None  # Holds speed from P127 if active
         
@@ -90,6 +104,7 @@ class LegalSpeedInference:
                 exit_residential_detected = True
 
         reason = "Mặc định (Không có biển báo)"
+        divider_text = "Có dải phân cách" if has_hard_divider else "Không có dải phân cách"
 
         # 3. Determine Speed Target for Current Frame
         # Case A: Explicit P127 Speed sign detected
@@ -103,20 +118,16 @@ class LegalSpeedInference:
         elif enter_residential_detected:
             self.residential_state = True
             self.last_explicit_speed = None  # Zone entry clears prior explicit speeds
-            speed_target = 50
-            reason = "Vào khu dân cư (R.420) -> Giới hạn 50 km/h"
-            
+            speed_target = DEFAULT_SPEED_LIMITS[(True, has_hard_divider)]
+            reason = f"Vào khu dân cư (R.420) + {divider_text} -> Giới hạn {speed_target} km/h"
+
         # Case C: Residential Zone exits
         elif exit_residential_detected:
             self.residential_state = False
             self.last_explicit_speed = None  # Zone exit clears prior explicit speeds
-            if has_hard_divider:
-                speed_target = 80
-                reason = "Ra khỏi khu dân cư (R.421) + Có dải phân cách -> Giới hạn 80 km/h"
-            else:
-                speed_target = 60
-                reason = "Ra khỏi khu dân cư (R.421) + Không có dải phân cách -> Giới hạn 60 km/h"
-                
+            speed_target = DEFAULT_SPEED_LIMITS[(False, has_hard_divider)]
+            reason = f"Ra khỏi khu dân cư (R.421) + {divider_text} -> Giới hạn {speed_target} km/h"
+
         # Case D: No signs detected (carry over states or infer from context)
         else:
             if self.last_explicit_speed is not None:
@@ -125,16 +136,9 @@ class LegalSpeedInference:
                 reason = f"Theo biển báo tốc độ trước đó P.127 ({speed_target} km/h)"
             else:
                 # Infer from context
-                if self.residential_state:
-                    speed_target = 50
-                    reason = "Đang trong khu dân cư (R.420) -> Giới hạn 50 km/h"
-                else:
-                    if has_hard_divider:
-                        speed_target = 80
-                        reason = "Ngoài khu dân cư + Có dải phân cách -> Giới hạn 80 km/h"
-                    else:
-                        speed_target = 60
-                        reason = "Ngoài khu dân cư + Không có dải phân cách -> Giới hạn 60 km/h"
+                speed_target = DEFAULT_SPEED_LIMITS[(self.residential_state, has_hard_divider)]
+                zone_text = "Trong khu dân cư" if self.residential_state else "Ngoài khu dân cư"
+                reason = f"{zone_text} + {divider_text} -> Giới hạn {speed_target} km/h"
 
         # 4. Temporal Smoothing / Bayesian-like Voting
         self.speed_history.append(speed_target)

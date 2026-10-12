@@ -67,7 +67,7 @@ Input Image [B, 3, 640, 640]
 ## 📂 Cấu Trúc Thư Mục Dự Án
 
 ```text
-adas_vietnam/
+DAP_Project_ADAS_support/
 │
 ├── configs/
 │   └── config.yaml                 # File cấu hình siêu tham số, đường dẫn dữ liệu
@@ -88,11 +88,13 @@ adas_vietnam/
 │   ├── visualization.py            # HUD overlay vẽ bounding box, mask và biển tốc độ
 │   └── utils.py                    # Hàm tiện ích (NMS, đổi hệ tọa độ, tính IoU)
 │
+├── tests/
+│   └── test_legal_speed_inference.py  # Kiểm thử bộ luật tốc độ
+│
 ├── train.py                        # Script huấn luyện hệ thống
 ├── evaluate.py                     # Script đánh giá hiệu năng trên tập validation
 ├── infer.py                        # Script chạy demo trên video/webcam
 ├── requirements.txt                # Danh sách thư viện phụ thuộc
-├── GR6_Paper_Report.pdf            # Báo cáo đồ án của nhóm
 ├── LICENSE                         # Giấy phép MIT
 └── README.md                       # Tài liệu hướng dẫn sử dụng (file này)
 ```
@@ -104,8 +106,8 @@ adas_vietnam/
 Dự án yêu cầu **Python 3.10+** và **PyTorch**.
 
 ```bash
-# 1. Di chuyển vào thư mục adas_vietnam
-cd adas_vietnam
+# 1. Di chuyển vào thư mục repo
+cd DAP_Project_ADAS_support
 
 # 2. Cài đặt các thư viện yêu cầu
 pip install -r requirements.txt
@@ -136,7 +138,9 @@ Nếu bạn muốn huấn luyện trên dữ liệu tự chuẩn bị, hãy sắ
   - `2`: Dải phân cách cứng (hard_divider)
   - `3`: Vùng xe di chuyển được (drivable_area)
 
-> **💡 Lưu ý:** Nếu thư mục `data/` trống, hệ thống sẽ tự động tạo dữ liệu đồ họa mô phỏng (Toy Dataset) để bạn có thể chạy thử mã nguồn ngay lập tức.
+> **💡 Lưu ý:** Nếu thư mục `data/` trống, hệ thống sẽ tự động tạo dữ liệu đồ họa mô phỏng (Toy Dataset) để bạn có thể chạy thử mã nguồn ngay lập tức. Dữ liệu này chỉ để kiểm tra pipeline chạy được, không dùng để đánh giá mô hình.
+
+**Dữ liệu của nhóm:** ngoài dữ liệu công khai, nhóm tự thu thập và gán nhãn **300 ảnh đường Việt Nam** (vạch kẻ đường và khu dân cư) để bù các trường hợp dữ liệu công khai thiếu. Ảnh không kèm trong repo; `data/` được loại khỏi Git.
 
 ---
 
@@ -176,18 +180,37 @@ python infer.py --source video.mp4 --weights checkpoints/best.pt --config config
 
 ## ⚙️ Logic Đề Xuất Tốc Độ Tối Đa (Luật Việt Nam)
 
-Mô-đun `legal_speed_inference.py` triển khai logic dựa trên quy chuẩn giao thông đường bộ Việt Nam:
+Mô-đun `legal_speed_inference.py` áp dụng **Thông tư 38/2024/TT-BGTVT** (hiệu lực 01/01/2025, thay Thông tư 31/2019), Điều 6 và Điều 7:
 
 | Tình huống | Tốc độ áp dụng |
 |-----------|----------------|
 | Phát hiện biển P.127 (bất kỳ) | Tốc độ trên biển (ưu tiên cao nhất) |
-| Vào khu dân cư – R.420, không có P.127 | **50 km/h** |
-| Ra khu dân cư – R.421 + có dải phân cách | **80 km/h** |
-| Ra khu dân cư – R.421 + không có dải phân cách | **60 km/h** |
-| Không có biển, ngoài khu dân cư + dải phân cách | **80 km/h** |
-| Không có biển, ngoài khu dân cư, không dải phân cách | **60 km/h** (mặc định) |
+| Trong khu dân cư (sau R.420) + có dải phân cách | **60 km/h** |
+| Trong khu dân cư (sau R.420) + không có dải phân cách | **50 km/h** |
+| Ngoài khu dân cư (sau R.421 hoặc mặc định) + có dải phân cách | **90 km/h** |
+| Ngoài khu dân cư (sau R.421 hoặc mặc định) + không có dải phân cách | **80 km/h** (mặc định) |
+
+**Giả định:** xe là ô tô chở người đến 30 chỗ (trừ xe buýt) hoặc ô tô tải đến 3,5 tấn; thấy dải phân cách cứng thì coi là "đường đôi". Đường một chiều từ hai làn trở lên cũng được mức của đường đôi nhưng mô hình chưa nhận biết được. Không áp dụng cho đường cao tốc.
 
 **Temporal Smoothing (Majority Voting):** Sử dụng cửa sổ lọc trượt (moving window). Tốc độ chỉ thay đổi khi một biển báo được tracker xác định ổn định tối thiểu $N$ frames, triệt tiêu hiện tượng sụt giảm tốc độ giả do biển báo bị che khuất hoặc lỗi nhận diện đơn lẻ.
+
+---
+
+## 🧪 Kiểm Thử
+
+```bash
+python tests/test_legal_speed_inference.py
+```
+
+Kiểm thử bao phủ bốn mức mặc định theo luật, việc ra/vào khu dân cư, biển P.127 ghi đè mức mặc định, và độ trễ của majority voting.
+
+---
+
+## 📌 Trạng Thái
+
+- Toàn bộ pipeline (`train.py` → `evaluate.py` → `infer.py`) đã được chạy lại từ đầu trên dữ liệu mô phỏng (PyTorch 2.13, CPU) để xác nhận code chạy được.
+- Repo **không kèm dữ liệu thật và checkpoint**, nên chưa có số liệu đánh giá nào tái lập được từ repo này. Các chỉ số in ra khi chạy trên dữ liệu mô phỏng không phản ánh chất lượng mô hình.
+- Chưa có bản triển khai trên thiết bị nhúng (Jetson, TensorRT).
 
 ---
 

@@ -244,9 +244,10 @@ def train(config_path):
                     'epoch': epoch,
                     'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
-                    'val_loss': val_loss,
-                    'mIoU': seg_metrics['mIoU'],
-                    'mAP': det_metrics['mAP']
+                    # Ép về float Python: số kiểu numpy làm torch.load(weights_only=True) báo lỗi từ PyTorch 2.6
+                    'val_loss': float(val_loss),
+                    'mIoU': float(seg_metrics['mIoU']),
+                    'mAP': float(det_metrics['mAP'])
                 }, os.path.join(save_dir, "best.pt"))
                 print(f"--> Saved best model checkpoint to {os.path.join(save_dir, 'best.pt')} (Val Loss improved to {val_loss:.4f})")
                 
@@ -255,7 +256,7 @@ def train(config_path):
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                'val_loss': val_loss
+                'val_loss': float(val_loss)
             }, os.path.join(save_dir, "last.pt"))
             
     print("Training finished.")

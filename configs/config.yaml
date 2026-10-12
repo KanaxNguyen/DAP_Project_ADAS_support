@@ -1,0 +1,43 @@
+# Cấu hình mặc định cho train.py, evaluate.py và infer.py.
+# Các giá trị là mặc định để chạy được ngay, không phải siêu tham số đã tinh chỉnh.
+
+data:
+  train_images: data/images/train
+  train_labels: data/labels/train
+  train_masks: data/masks/train
+  val_images: data/images/val
+  val_labels: data/labels/val
+  val_masks: data/masks/val
+  image_size: 640
+
+model:
+  backbone: resnet18        # resnet18 | resnet34
+  grid_size: 40             # 640 / stride 16
+  num_classes_det: 7        # P127_40, P127_50, P127_60, P127_80, P127_90, R420, R421
+  num_classes_seg: 4        # background, lane_marking, hard_divider, drivable_area
+
+train:
+  device: cuda              # tự chuyển sang cpu nếu không có CUDA
+  epochs: 50
+  batch_size: 8
+  learning_rate: 0.0002
+  weight_decay: 0.0001
+  val_interval: 1
+  save_dir: checkpoints
+
+tracker:
+  max_age: 5
+  min_hits: 2
+  iou_threshold: 0.3
+
+speed_inference:
+  smoothing_window: 10
+  hard_divider_threshold: 0.0005   # tỷ lệ pixel dải phân cách để coi là "đường đôi"
+
+inference:
+  conf_threshold: 0.5
+  iou_threshold: 0.45
+  sahi:
+    enabled: false
+    slice_size: 640
+    overlap_ratio: 0.25
